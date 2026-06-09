@@ -96,6 +96,25 @@ These notes assume you already have a prepared DE10-Nano SD card or disk image
 with a boot partition and Linux root filesystem. This repository does not yet
 describe the full SD-card image generation flow.
 
+The root filesystem used for this bring-up was Ubuntu Base 24.04 LTS for
+`armhf`, downloaded from the Ubuntu 24.04.2 release area:
+
+```text
+https://cdimage.ubuntu.com/ubuntu-base/releases/24.04.2/release/
+```
+
+The running system may report only `Ubuntu 24.04 LTS` rather than a specific
+point release. Ubuntu may publish later Noble point-release tarballs in the same
+area. For example:
+
+```text
+https://cdimage.ubuntu.com/ubuntu-base/releases/24.04.2/release/ubuntu-base-24.04.3-base-armhf.tar.gz
+```
+
+Use an Ubuntu Base 24.04 `armhf` tarball from that release area to match this
+bring-up closely. Newer Ubuntu Base releases may also work, but have not been
+tested with this platform flow.
+
 Set paths to the mounted boot and rootfs partitions:
 
 ```bash
