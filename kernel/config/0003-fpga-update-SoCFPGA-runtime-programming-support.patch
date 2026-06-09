@@ -1,0 +1,89 @@
+From 2cc51f0c56001f2c911c2e8a0bfebeccb295baef Mon Sep 17 00:00:00 2001
+From: "Ben G." <bgodfrey@berkeley.edu>
+Date: Mon, 8 Jun 2026 13:30:50 -0700
+Subject: [PATCH 3/3] fpga: update SoCFPGA runtime programming support
+
+---
+ drivers/fpga/fpga-bridge.c | 36 ++++++++++++++++++++++++++++++++++++
+ drivers/fpga/socfpga.c     | 11 +++++++++--
+ 2 files changed, 45 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/fpga/fpga-bridge.c b/drivers/fpga/fpga-bridge.c
+index a024be2b84e2..3797f4d79125 100644
+--- a/drivers/fpga/fpga-bridge.c
++++ b/drivers/fpga/fpga-bridge.c
+@@ -19,6 +19,41 @@ static const struct class fpga_bridge_class;
+ /* Lock for adding/removing bridges to linked lists*/
+ static DEFINE_SPINLOCK(bridge_list_lock);
+ 
++static ssize_t enable_show(struct device *dev,
++                           struct device_attribute *attr,
++                           char *buf)
++{
++    struct fpga_bridge *bridge = to_fpga_bridge(dev);
++
++    /* If no method, assume enabled */
++    return sysfs_emit(buf, "1\n");
++}
++
++static ssize_t enable_store(struct device *dev,
++                            struct device_attribute *attr,
++                            const char *buf, size_t count)
++{
++    struct fpga_bridge *bridge = to_fpga_bridge(dev);
++    long val;
++    int ret;
++
++    if (!bridge->br_ops || !bridge->br_ops->enable_set)
++        return -EINVAL;
++
++    ret = kstrtol(buf, 0, &val);
++    if (ret)
++        return ret;
++
++    ret = bridge->br_ops->enable_set(bridge, val ? true : false);
++    if (ret)
++        return ret;
++
++    return count;
++}
++
++
++static DEVICE_ATTR_RW(enable);
++
+ /**
+  * fpga_bridge_enable - Enable transactions on the bridge
+  *
+@@ -311,6 +346,7 @@ static DEVICE_ATTR_RO(state);
+ static struct attribute *fpga_bridge_attrs[] = {
+ 	&dev_attr_name.attr,
+ 	&dev_attr_state.attr,
++    &dev_attr_enable.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(fpga_bridge);
+diff --git a/drivers/fpga/socfpga.c b/drivers/fpga/socfpga.c
+index 723ea0ad3f09..49b1df2a14ec 100644
+--- a/drivers/fpga/socfpga.c
++++ b/drivers/fpga/socfpga.c
+@@ -568,8 +568,15 @@ static int socfpga_fpga_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	mgr = devm_fpga_mgr_register(dev, "Altera SOCFPGA FPGA Manager",
+-				     &socfpga_fpga_ops, priv);
++	struct fpga_manager_info info = {
++    .name  = "Altera SOCFPGA FPGA Manager",
++    .mops  = &socfpga_fpga_ops,
++    .priv  = priv,
++	};
++
++	mgr = devm_fpga_mgr_register_full(dev, &info);
++	//mgr = devm_fpga_mgr_register(dev, "Altera SOCFPGA FPGA Manager",
++	//			     &socfpga_fpga_ops, priv);
+ 	return PTR_ERR_OR_ZERO(mgr);
+ }
+ 
+-- 
+2.43.0
+

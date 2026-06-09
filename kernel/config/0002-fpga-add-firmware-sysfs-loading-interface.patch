@@ -1,0 +1,83 @@
+From acd3634dc43afcc1884467a461e736d5be33d62a Mon Sep 17 00:00:00 2001
+From: "Ben G." <bgodfrey@berkeley.edu>
+Date: Mon, 8 Jun 2026 13:30:25 -0700
+Subject: [PATCH 2/3] fpga: add firmware sysfs loading interface
+
+---
+ drivers/fpga/fpga-mgr.c | 46 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/drivers/fpga/fpga-mgr.c b/drivers/fpga/fpga-mgr.c
+index 06651389c592..13ab6480fc2d 100644
+--- a/drivers/fpga/fpga-mgr.c
++++ b/drivers/fpga/fpga-mgr.c
+@@ -17,9 +17,47 @@
+ #include <linux/slab.h>
+ #include <linux/scatterlist.h>
+ #include <linux/highmem.h>
++#include <linux/sysfs.h>
++#include <linux/device.h>
++#include <linux/string.h>
+ 
+ static DEFINE_IDA(fpga_mgr_ida);
+ static const struct class fpga_mgr_class;
++static int fpga_mgr_firmware_load(struct fpga_manager *mgr, struct fpga_image_info *info, const char *image_name);
++
++static ssize_t firmware_store(struct device *dev,
++			      struct device_attribute *attr,
++			      const char *buf, size_t count)
++{
++	struct fpga_manager *mgr = to_fpga_manager(dev);
++	struct fpga_image_info *info;
++	char *image_name;
++	int ret;
++
++	image_name = kstrndup(buf, count, GFP_KERNEL);
++	if (!image_name)
++		return -ENOMEM;
++
++	strim(image_name); // Trim whitespace and newline
++
++	info = fpga_image_info_alloc(&mgr->dev);
++	if (!info) {
++		kfree(image_name);
++		return -ENOMEM;
++	}
++
++	info->firmware_name = image_name;
++	info->flags = 0;  // Optional: adjust based on use
++
++	ret = fpga_mgr_firmware_load(mgr, info, image_name);
++
++	kfree(image_name);
++	fpga_image_info_free(info);
++
++	return ret ? ret : count;
++}
++
++static DEVICE_ATTR_WO(firmware);
+ 
+ struct fpga_mgr_devres {
+ 	struct fpga_manager *mgr;
+@@ -827,10 +865,18 @@ fpga_mgr_register_full(struct device *parent, const struct fpga_manager_info *in
+ 	mgr->state = fpga_mgr_state(mgr);
+ 
+ 	ret = device_register(&mgr->dev);
++
++
+ 	if (ret) {
+ 		put_device(&mgr->dev);
+ 		return ERR_PTR(ret);
+ 	}
++	if (mops->write && !mops->write_sg) {
++		pr_info("FPGA: creating firmware sysfs interface for %s\n", info->name);
++		ret = device_create_file(&mgr->dev, &dev_attr_firmware);
++		if (ret)
++			pr_err("FPGA: failed to create firmware attribute: %d\n", ret);
++	}
+ 
+ 	return mgr;
+ 
+-- 
+2.43.0
+
