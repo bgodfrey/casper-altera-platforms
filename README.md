@@ -2,18 +2,18 @@
 
 This repository contains the patches and runtime modifications required
 to enable CASPER FPGA programming on Intel Cyclone V SoCs using Linux
-FPGA Manager and tcpborphserver.
+FPGA Manager.
 
 Target platform:
 - DE10-Nano
 - Cyclone V SoC
 - Linux 6.8-rc7
 
-This bring-up was informed by the DE10-Nano embedded Linux notes from
-`zangman/de10-nano`, especially the U-Boot and kernel build guides. This
-repository keeps the CASPER-specific flow separate: it uses upstream Linux
-`v6.8-rc7`, applies the patches in `kernel/config/`, and programs the FPGA at
-runtime through Linux FPGA Manager instead of relying on configfs overlays.
+This bring-up was informed by the Absolute Beginner's Guide to DE10-Nano at
+[zangman/de10-nano](https://github.com/zangman/de10-nano), especially the
+U-Boot and kernel build guides. This repository keeps the CASPER-specific flow
+separate: it uses upstream Linux `v6.8-rc7`, applies the patches in
+`kernel/config/`, and programs the FPGA at runtime through Linux FPGA Manager.
 
 ## Kernel Setup
 
@@ -24,9 +24,7 @@ From the directory where you want to keep the Linux source tree, clone the
 kernel with:
 
 ```bash
-git clone --depth 1 --branch v6.8-rc7 \
-  https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
-  linux-6.8-rc7
+git clone --depth 1 --branch v6.8-rc7 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git linux-6.8-rc7
 ```
 
 Set a path to this repository:
@@ -96,7 +94,7 @@ Other common prefixes include `arm-none-linux-gnueabihf-` and
 
 These notes assume you already have a prepared DE10-Nano SD card or disk image
 with a boot partition and Linux root filesystem. This repository does not yet
-own the full SD-card image generation flow.
+describe the full SD-card image generation flow.
 
 Set paths to the mounted boot and rootfs partitions:
 
@@ -160,20 +158,6 @@ attribute should be available at:
 ```text
 /sys/class/fpga_manager/fpga0/firmware
 ```
-
-The CASPER runtime programming path is:
-
-```text
-casperfpga
-  -> tcpborphserver
-  -> extract raw .rbf payload from uploaded .fpg
-  -> write .rbf to /lib/firmware
-  -> echo filename.rbf > /sys/class/fpga_manager/fpga0/firmware
-  -> Linux FPGA Manager programs the Cyclone V FPGA
-```
-
-The FPGA Manager requires a clean raw `.rbf` file. CASPER `.fpg` metadata must
-not remain in the file written to `/lib/firmware`.
 
 Useful runtime checks on the board:
 
