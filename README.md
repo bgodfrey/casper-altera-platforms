@@ -191,7 +191,7 @@ attribute should be available at:
 Useful runtime checks on the board:
 
 ```bash
-test -e /sys/class/fpga_manager/fpga0/firmware
+ls -l /sys/class/fpga_manager/fpga0/firmware
 cat /sys/class/fpga_manager/fpga0/state
 ls /sys/class/fpga_bridge/
 for e in /sys/class/fpga_bridge/*/enable; do echo 1 | sudo tee "$e"; done
