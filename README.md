@@ -96,6 +96,16 @@ These notes assume you already have a prepared DE10-Nano SD card or disk image
 with a boot partition and Linux root filesystem. This repository does not yet
 describe the full SD-card image generation flow.
 
+The SD-card image layout was informed by the
+[zangman/de10-nano SD-card image guide](https://github.com/zangman/de10-nano/blob/master/docs/Building-the-SD-Card-image.md).
+That flow creates the bootable media and partition layout; this repository
+documents the CASPER-specific kernel, device tree, and runtime pieces to place
+onto that image.
+
+The root filesystem setup was also informed by the
+[zangman/de10-nano Debian rootfs guide](https://github.com/zangman/de10-nano/blob/master/docs/Debian-Root-File-System.md).
+
+
 The root filesystem used for this bring-up was Ubuntu Base 24.04 LTS for
 `armhf`, downloaded from the Ubuntu 24.04.2 release area:
 
@@ -204,5 +214,9 @@ The expected final state is `operating`.
   https://github.com/zangman/de10-nano/blob/master/docs/Building-the-Universal-Bootloader-U-Boot.md
 - DE10-Nano kernel guide:
   https://github.com/zangman/de10-nano/blob/master/docs/Building-the-Kernel.md
+- DE10-Nano Debian rootfs guide:
+  https://github.com/zangman/de10-nano/blob/master/docs/Debian-Root-File-System.md
+- DE10-Nano SD-card image guide:
+  https://github.com/zangman/de10-nano/blob/master/docs/Building-the-SD-Card-image.md
 - Altera SoCFPGA U-Boot tree:
   https://github.com/altera-fpga/u-boot-socfpga/tree/socfpga_v2024.07
